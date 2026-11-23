@@ -1,0 +1,18 @@
+{
+  "name": "TIFF / BMP 8-Bit Grayscale Converter",
+  "short_name": "TIFF Converter",
+  "description": "High-precision 16-bit, 32-bit float, RGBA, and CMYK TIFF / BMP to 8-bit grayscale converter running locally via WebAssembly.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#11111b",
+  "theme_color": "#1e1e2e",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
