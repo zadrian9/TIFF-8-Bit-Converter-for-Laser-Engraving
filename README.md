@@ -131,4 +131,4 @@ Tiff_8Bit_Converter_PWA_V1/
 
 ## License
 
-MIT License. Free for personal and commercial use.
+This project is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE).
