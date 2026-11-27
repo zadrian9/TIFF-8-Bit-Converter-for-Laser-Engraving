@@ -107,6 +107,22 @@
             </tbody>
           </table>
         </div>
+
+        <!-- Browser Storage & Batch Footprint Meter -->
+        <div id="storage-meter" class="storage-meter" aria-live="polite">
+          <div class="storage-meter-header">
+            <span class="storage-meter-title">Browser Storage</span>
+            <span id="storage-remaining-text" class="storage-meter-remaining">Checking storage...</span>
+          </div>
+          <div id="storage-bar" class="storage-bar-track" role="meter" aria-label="Browser storage usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div id="storage-bar-origin" class="storage-bar-segment origin" style="width: 0%;"></div>
+            <div id="storage-bar-batch" class="storage-bar-segment batch" style="width: 0%;"></div>
+          </div>
+          <div class="storage-meter-details">
+            <span id="storage-breakdown-text">Cache: -- • Batch: 0 B • Quota: --</span>
+            <span id="storage-warning-text" class="storage-warning hidden">Low storage — download ZIP or clear queue</span>
+          </div>
+        </div>
       </div>
 
       <!-- Conversion Settings -->

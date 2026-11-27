@@ -42,6 +42,13 @@ const el = {
   previewAfterImg: document.getElementById("preview-after-img"),
   beforePlaceholder: document.getElementById("before-placeholder"),
   afterPlaceholder: document.getElementById("after-placeholder"),
+  storageMeter: document.getElementById("storage-meter"),
+  storageRemainingText: document.getElementById("storage-remaining-text"),
+  storageBar: document.getElementById("storage-bar"),
+  storageBarOrigin: document.getElementById("storage-bar-origin"),
+  storageBarBatch: document.getElementById("storage-bar-batch"),
+  storageBreakdownText: document.getElementById("storage-breakdown-text"),
+  storageWarningText: document.getElementById("storage-warning-text"),
 };
 
 // --------------------------------------------------------------------------
@@ -63,6 +70,78 @@ function updateEngineStatus(status, detail) {
   if (status === "ready") {
     state.workerReady = true;
     updateQueueButtons();
+    updateStorageMeter();
+  }
+}
+
+// --------------------------------------------------------------------------
+// Browser Storage & Batch Footprint Meter
+// --------------------------------------------------------------------------
+
+function formatBytes(bytes) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return "0 B";
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  const idx = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
+  const value = bytes / Math.pow(1024, idx);
+  return `${idx === 0 ? Math.round(value) : value.toFixed(1)} ${units[idx]}`;
+}
+
+function getBatchStorageBytes() {
+  let inputBytes = 0;
+  let outputBytes = 0;
+  for (const f of state.files) {
+    inputBytes += f.buffer ? f.buffer.byteLength : 0;
+    outputBytes += f.convertedBlob ? f.convertedBlob.size : (f.outSizeBytes || 0);
+  }
+  return { inputBytes, outputBytes, totalBytes: inputBytes + outputBytes };
+}
+
+async function updateStorageMeter() {
+  if (!el.storageMeter) return;
+  const batch = getBatchStorageBytes();
+
+  let quota = 0;
+  let originUsed = 0;
+  if ("storage" in navigator && typeof navigator.storage.estimate === "function") {
+    try {
+      const estimate = await navigator.storage.estimate();
+      quota = estimate.quota || 0;
+      originUsed = Math.max(0, estimate.usage || 0);
+    } catch {
+      quota = 0;
+    }
+  }
+
+  if (quota > 0) {
+    const effectiveUsed = originUsed + batch.totalBytes;
+    const remaining = Math.max(0, quota - effectiveUsed);
+    const originPct = Math.min(100, (originUsed / quota) * 100);
+    const batchPct = Math.min(100 - originPct, (batch.totalBytes / quota) * 100);
+    const totalPct = Math.min(100, originPct + batchPct);
+
+    el.storageBarOrigin.style.width = `${originPct.toFixed(2)}%`;
+    el.storageBarBatch.style.width = `${batchPct.toFixed(2)}%`;
+    el.storageBar.setAttribute("aria-valuenow", String(Math.round(totalPct)));
+    el.storageBar.setAttribute("aria-valuetext", `${formatBytes(remaining)} left of ${formatBytes(quota)}`);
+
+    el.storageRemainingText.textContent = `${formatBytes(remaining)} left`;
+    el.storageBreakdownText.textContent = `Cache: ${formatBytes(originUsed)} • Batch: ${formatBytes(batch.totalBytes)} • Quota: ${formatBytes(quota)}`;
+
+    const isDanger = totalPct >= 90 || remaining < 50 * 1024 * 1024;
+    const isWarn = !isDanger && (totalPct >= 75 || remaining < 150 * 1024 * 1024);
+    el.storageMeter.classList.toggle("danger", isDanger);
+    el.storageMeter.classList.toggle("warn", isWarn);
+    el.storageWarningText.classList.toggle("hidden", !isDanger && !isWarn);
+  } else {
+    el.storageBarOrigin.style.width = "0%";
+    el.storageBarBatch.style.width = "0%";
+    el.storageBar.setAttribute("aria-valuenow", "0");
+    el.storageBar.removeAttribute("aria-valuetext");
+
+    el.storageRemainingText.textContent = `Batch: ${formatBytes(batch.totalBytes)}`;
+    el.storageBreakdownText.textContent = `Browser storage quota unavailable • Input: ${formatBytes(batch.inputBytes)} • Output: ${formatBytes(batch.outputBytes)}`;
+    el.storageMeter.classList.remove("warn", "danger");
+    el.storageWarningText.classList.add("hidden");
   }
 }
 
@@ -171,6 +250,7 @@ async function handleFiles(fileList) {
     state.files.push(item);
     addedCount++;
     renderTable();
+    updateStorageMeter();
 
     // Inspect file in worker
     try {
@@ -417,6 +497,7 @@ async function convertAll() {
     }
 
     renderTable();
+    updateStorageMeter();
   }
 
   el.progressBarFill.style.width = "100%";
@@ -521,6 +602,7 @@ function setupEventListeners() {
     renderTable();
     el.progressBarFill.style.width = "0%";
     el.progressLabel.textContent = "Ready";
+    updateStorageMeter();
   });
   el.btnClearLog.addEventListener("click", () => {
     el.logConsole.innerHTML = "";
@@ -587,4 +669,5 @@ function registerServiceWorker() {
 
 // Initialize Application
 setupEventListeners();
+updateStorageMeter();
 registerServiceWorker().then(initWorker);

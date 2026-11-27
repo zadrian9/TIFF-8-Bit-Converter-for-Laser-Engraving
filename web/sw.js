@@ -4,7 +4,7 @@
  */
 
 const PREFIX = "tiff-converter-pwa-";
-const CACHE_NAME = PREFIX + "v1.2";
+const CACHE_NAME = PREFIX + "v1.3";
 const APP_SHELL = [
   "./",
   "./index.html",
