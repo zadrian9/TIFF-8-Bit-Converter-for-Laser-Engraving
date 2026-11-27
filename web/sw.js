@@ -3,7 +3,8 @@
  * Caches app shell and Pyodide WebAssembly runtime for offline execution
  */
 
-const CACHE_NAME = "tiff-converter-pwa-v1.1";
+const PREFIX = "tiff-converter-pwa-";
+const CACHE_NAME = PREFIX + "v1.2";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -12,73 +13,92 @@ const APP_SHELL = [
   "./worker.js",
   "./converter_core.py",
   "./manifest.json",
-  "./icons/icon.svg"
+  "./vendor/jszip.min.js",
+  "./icons/icon.svg",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png",
+  "./icons/icon-maskable-512.png",
+  "./icons/apple-touch-icon-180.png"
 ];
+
+const RUNTIME_HOSTS = new Set([
+  "cdn.jsdelivr.net",
+  "pypi.org",
+  "files.pythonhosted.org"
+]);
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(APP_SHELL);
-    }).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(APP_SHELL))
+      .then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches.keys()
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter((key) => key.startsWith(PREFIX) && key !== CACHE_NAME)
+            .map((key) => caches.delete(key))
+        )
+      )
+      .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener("fetch", (event) => {
-  const url = new URL(event.request.url);
+  const req = event.request;
+  if (req.method !== "GET") return;
 
-  // Cache Pyodide CDN packages and app files
-  if (
-    url.origin === location.origin ||
-    url.hostname.includes("jsdelivr.net") ||
-    url.hostname.includes("cloudflare.com") ||
-    url.hostname.includes("pypi.org") ||
-    url.hostname.includes("pythonhosted.org")
-  ) {
+  const url = new URL(req.url);
+  const sameOrigin = url.origin === location.origin;
+  if (!sameOrigin && !RUNTIME_HOSTS.has(url.hostname)) return;
+
+  // Same-origin navigations: network-first with cached shell fallback
+  if (sameOrigin && req.mode === "navigate") {
     event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
-        if (cachedResponse) {
-          // Fetch updated version in background for local shell files
-          if (url.origin === location.origin) {
-            fetch(event.request)
-              .then((networkResponse) => {
-                if (networkResponse && networkResponse.status === 200) {
-                  caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(event.request, networkResponse);
-                  });
-                }
-              })
-              .catch(() => {});
-          }
-          return cachedResponse;
-        }
-
-        return fetch(event.request).then((networkResponse) => {
-          if (
-            networkResponse &&
-            (networkResponse.status === 200 || networkResponse.type === "opaque")
-          ) {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
+      fetch(req)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.ok) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put("./index.html", copy));
           }
           return networkResponse;
-        });
-      })
+        })
+        .catch(() => caches.match("./index.html"))
     );
+    return;
   }
+
+  // Other same-origin & allowed Pyodide/PyPI assets: cache-first with background refresh for same-origin
+  event.respondWith(
+    caches.match(req).then((cachedResponse) => {
+      if (cachedResponse) {
+        if (sameOrigin) {
+          fetch(req)
+            .then((networkResponse) => {
+              if (networkResponse && networkResponse.ok) {
+                caches.open(CACHE_NAME).then((cache) => cache.put(req, networkResponse));
+              }
+            })
+            .catch(() => {});
+        }
+        return cachedResponse;
+      }
+
+      return fetch(req).then((networkResponse) => {
+        if (
+          networkResponse &&
+          (networkResponse.ok || (!sameOrigin && networkResponse.type === "opaque"))
+        ) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, responseToCache));
+        }
+        return networkResponse;
+      });
+    })
+  );
 });

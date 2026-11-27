@@ -1,31 +1,117 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1e1e2e"/>
-      <stop offset="100%" stop-color="#11111b"/>
+    <!-- Background Gradient -->
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#090d16"/>
+    </radialGradient>
+
+    <!-- Laser Beam Glow -->
+    <linearGradient id="beamGrad" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.9"/>
+      <stop offset="45%" stop-color="#818cf8" stop-opacity="0.95"/>
+      <stop offset="70%" stop-color="#c084fc" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#f43f5e" stop-opacity="1"/>
     </linearGradient>
-    <linearGradient id="primary" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#89b4fa"/>
-      <stop offset="100%" stop-color="#b4befe"/>
+
+    <radialGradient id="focalGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="30%" stop-color="#f43f5e" stop-opacity="0.9"/>
+      <stop offset="70%" stop-color="#8b5cf6" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="nozzleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="30%" stop-color="#94a3b8"/>
+      <stop offset="50%" stop-color="#cbd5e1"/>
+      <stop offset="70%" stop-color="#64748b"/>
+      <stop offset="100%" stop-color="#334155"/>
     </linearGradient>
-    <linearGradient id="gray-ramp" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#11111b"/>
-      <stop offset="50%" stop-color="#7f849c"/>
-      <stop offset="100%" stop-color="#cdd6f4"/>
+
+    <linearGradient id="partGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="100%" stop-color="#1e293b"/>
     </linearGradient>
+
+    <filter id="laserGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur1"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="15" result="blur2"/>
+      <feMerge>
+        <feMergeNode in="blur2"/>
+        <feMergeNode in="blur1"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
-  
-  <!-- App Background -->
-  <rect width="512" height="512" rx="100" fill="url(#bg)" stroke="#313244" stroke-width="12"/>
-  
-  <!-- Image Frame -->
-  <rect x="76" y="86" width="360" height="260" rx="28" fill="#181825" stroke="url(#primary)" stroke-width="14"/>
-  
-  <!-- Mountain graphic -->
-  <path d="M110 300 L210 180 L280 250 L340 190 L402 300 Z" fill="#313244"/>
-  <circle cx="170" cy="155" r="28" fill="url(#primary)"/>
-  
-  <!-- 8-Bit Grayscale Ramp Badge -->
-  <rect x="76" y="376" width="360" height="50" rx="16" fill="url(#gray-ramp)" stroke="#45475a" stroke-width="6"/>
-  <text x="256" y="410" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-size="26" font-weight="800" fill="#11111b" text-anchor="middle" letter-spacing="4">8-BIT GRAYSCALE</text>
+
+  <!-- App Rounded Icon Container -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+  <rect width="508" height="508" x="2" y="2" rx="110" fill="none" stroke="#334155" stroke-width="3" stroke-opacity="0.6"/>
+
+  <!-- Precision Measurement Grid / Reticle Background -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="4,6" opacity="0.4"/>
+  <circle cx="256" cy="256" r="110" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="2,4" opacity="0.25"/>
+  <line x1="256" y1="56" x2="256" y2="456" stroke="#475569" stroke-width="1.5" stroke-dasharray="6,6" opacity="0.4"/>
+  <line x1="56" y1="256" x2="456" y2="256" stroke="#475569" stroke-width="1.5" stroke-dasharray="6,6" opacity="0.4"/>
+
+  <!-- Workpiece Material Plate -->
+  <path d="M 76,354 L 436,354 L 436,428 L 76,428 Z" fill="url(#partGrad)" stroke="#475569" stroke-width="2"/>
+  <line x1="62" y1="354" x2="450" y2="354" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4,4"/>
+
+  <!-- Engraved Dithered Dots on Plate -->
+  <g fill="#94a3b8" opacity="0.65">
+    <circle cx="122" cy="390" r="2.5"/>
+    <circle cx="144" cy="382" r="2.5"/>
+    <circle cx="144" cy="398" r="2.5"/>
+    <circle cx="166" cy="390" r="3"/>
+    <circle cx="188" cy="380" r="2.5"/>
+    <circle cx="188" cy="400" r="3.5"/>
+    <circle cx="210" cy="388" r="3.5"/>
+    <circle cx="232" cy="378" r="3"/>
+    <circle cx="232" cy="402" r="3.5"/>
+    <circle cx="280" cy="378" r="3"/>
+    <circle cx="280" cy="402" r="3.5"/>
+    <circle cx="302" cy="388" r="3.5"/>
+    <circle cx="324" cy="380" r="2.5"/>
+    <circle cx="324" cy="400" r="3.5"/>
+    <circle cx="346" cy="390" r="3"/>
+    <circle cx="368" cy="382" r="2.5"/>
+    <circle cx="368" cy="398" r="2.5"/>
+    <circle cx="390" cy="390" r="2.5"/>
+  </g>
+  <ellipse cx="256" cy="370" rx="84" ry="22" fill="#06b6d4" fill-opacity="0.06" stroke="#06b6d4" stroke-width="2" stroke-dasharray="7,5" opacity="0.75"/>
+
+  <!-- Focused Laser Beam -->
+  <g filter="url(#laserGlow)">
+    <path d="M 234,146 L 278,146 L 265,332 L 260,368 L 252,368 L 247,332 Z" fill="url(#beamGrad)" opacity="0.95"/>
+    <polygon points="247,332 265,332 260,368 252,368" fill="#f43f5e" opacity="0.95"/>
+  </g>
+  <line x1="256" y1="148" x2="256" y2="368" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.65"/>
+
+  <!-- 8-Step Grayscale Ramp Strip (8-Bit Quantization Bar) -->
+  <rect x="108" y="220" width="296" height="52" rx="8" fill="#0f172a" stroke="#64748b" stroke-width="2"/>
+  <g stroke="#475569" stroke-width="1.5">
+    <rect x="116" y="228" width="35" height="36" fill="#0b0f19"/>
+    <rect x="151" y="228" width="35" height="36" fill="#222938"/>
+    <rect x="186" y="228" width="35" height="36" fill="#3b4559"/>
+    <rect x="221" y="228" width="35" height="36" fill="#5c687e"/>
+    <rect x="256" y="228" width="35" height="36" fill="#808ca1"/>
+    <rect x="291" y="228" width="35" height="36" fill="#a6b1c2"/>
+    <rect x="326" y="228" width="35" height="36" fill="#cfd7e3"/>
+    <rect x="361" y="228" width="35" height="36" fill="#f8fafc"/>
+  </g>
+  <!-- Amber quantization step indicator -->
+  <polygon points="256,210 264,220 248,220" fill="#f59e0b"/>
+  <line x1="116" y1="278" x2="396" y2="278" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="4,4" opacity="0.7"/>
+
+  <!-- Intense Laser Focal Spot Glow -->
+  <circle cx="256" cy="368" r="28" fill="url(#focalGlow)"/>
+  <circle cx="256" cy="368" r="6" fill="#ffffff"/>
+  <line x1="236" y1="368" x2="276" y2="368" stroke="#ffffff" stroke-width="1.5" opacity="0.8"/>
+
+  <!-- Precision Laser Nozzle -->
+  <path d="M 184,52 L 328,52 L 328,96 L 284,148 L 228,148 L 184,96 Z" fill="url(#nozzleGrad)" stroke="#64748b" stroke-width="2.5"/>
+  <ellipse cx="256" cy="148" rx="28" ry="8" fill="#0f172a" stroke="#94a3b8" stroke-width="2"/>
+  <line x1="256" y1="52" x2="256" y2="146" stroke="#ffffff" stroke-width="1" opacity="0.4"/>
 </svg>

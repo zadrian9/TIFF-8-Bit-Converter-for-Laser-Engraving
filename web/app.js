@@ -106,6 +106,10 @@ function initWorker() {
 
 function callWorker(action, payload, transferables = []) {
   return new Promise((resolve, reject) => {
+    if (!state.worker) {
+      reject(new Error("WebAssembly engine is still starting. Please wait a moment..."));
+      return;
+    }
     state.activeJobId++;
     const id = state.activeJobId;
     state.pendingRequests.set(id, { resolve, reject });
@@ -564,20 +568,23 @@ function setupEventListeners() {
 // --------------------------------------------------------------------------
 
 function registerServiceWorker() {
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("sw.js")
-        .then((reg) => {
-          log("ServiceWorker active (offline caching enabled).", "info");
-        })
-        .catch((err) => {
-          console.warn("ServiceWorker registration failed:", err);
-        });
+  if (!("serviceWorker" in navigator)) return Promise.resolve();
+  return navigator.serviceWorker.register("sw.js")
+    .then(() => navigator.serviceWorker.ready)
+    .then(() => {
+      log("ServiceWorker active (offline caching enabled).", "info");
+      if (navigator.serviceWorker.controller) return;
+      // First visit: wait for clients.claim() so engine downloads are cached.
+      return new Promise((resolve) => {
+        navigator.serviceWorker.addEventListener("controllerchange", resolve, { once: true });
+        setTimeout(resolve, 4000);
+      });
+    })
+    .catch((err) => {
+      console.warn("ServiceWorker registration failed:", err);
     });
-  }
 }
 
 // Initialize Application
-initWorker();
 setupEventListeners();
-registerServiceWorker();
+registerServiceWorker().then(initWorker);

@@ -109,8 +109,14 @@ Tiff_8Bit_Converter_PWA_V1/
 │   ├── converter_core.py       # Core conversion engine running in WASM
 │   ├── manifest.json           # Progressive Web App manifest
 │   ├── sw.js                   # Service Worker for offline asset caching
+│   ├── vendor/
+│   │   └── jszip.min.js        # Vendored JSZip for offline batch ZIP export
 │   └── icons/
-│       └── icon.svg            # App icon
+│       ├── icon.svg            # App icon (vector)
+│       ├── icon-192.png     # App icon (192x192 PNG)
+│       ├── icon-512.png     # App icon (512x512 PNG)
+│       ├── icon-maskable-512.png  # Maskable app icon (512x512 PNG)
+│       └── apple-touch-icon-180.png  # iOS home screen icon
 ├── converter_core.py           # Shared conversion engine (used by desktop app)
 ├── tiff_8bit_converter.py      # Desktop Tkinter GUI application
 ├── test_converter.py           # Core conversion test suite
